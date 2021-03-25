@@ -61,10 +61,10 @@ import (
 // Where to store this stuff (log file, collection, and table names)
 var SeriesCollections = map[string]string{
 	"SocialHarvestMessage":           "messages",
-	"SocialHarvestSharedLink":        "shared_links",
+	"SocialHarvestSharedLink":        "sharedlinks",
 	"SocialHarvestMention":           "mentions",
 	"SocialHarvestHashtag":           "hashtags",
-	"SocialHarvestContributorGrowth": "contributor_growth",
+	"SocialHarvestContributorGrowth": "contributorgrowth",
 	"SocialHarvestHarvest":           "harvest",
 	"SocialHarvestReport":            "reports",
 }

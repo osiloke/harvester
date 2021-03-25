@@ -17,22 +17,24 @@
 package harvester
 
 import (
-	"github.com/SocialHarvest/harvester/lib/config"
-	"github.com/SocialHarvestVendors/anaconda"
-	geohash "github.com/SocialHarvestVendors/geohash-golang"
 	"log"
 	"net/url"
 	"strconv"
 	"time"
+
+	"github.com/SocialHarvest/harvester/lib/config"
+	"github.com/SocialHarvestVendors/anaconda"
+	geohash "github.com/SocialHarvestVendors/geohash-golang"
 )
 
+// NewTwitter create anaconda twitter client
 func NewTwitter(servicesConfig config.ServicesConfig) {
 	anaconda.SetConsumerKey(servicesConfig.Twitter.ApiKey)
 	anaconda.SetConsumerSecret(servicesConfig.Twitter.ApiSecret)
 	services.twitter = anaconda.NewTwitterApi(servicesConfig.Twitter.AccessToken, servicesConfig.Twitter.AccessTokenSecret)
 }
 
-// If the territory has different keys to use
+// NewTwitterTerritoryCredentials If the territory has different keys to use
 func NewTwitterTerritoryCredentials(territory string) {
 	for _, t := range harvestConfig.Territories {
 		if t.Name == territory {
@@ -45,7 +47,7 @@ func NewTwitterTerritoryCredentials(territory string) {
 	}
 }
 
-// Search for status updates and just pass the Tweet along (no special mapping required like FacebookPost{} because the Tweet struct is used across multiple API calls unlike Facebook)
+// TwitterSearch Search for status updates and just pass the Tweet along (no special mapping required like FacebookPost{} because the Tweet struct is used across multiple API calls unlike Facebook)
 // All "search" functions (and anything that gets data from an API) will now normalize the data, mapping it to a Social Harvest struct.
 // This means there will be no way to get the original data from the service (back in the main app or from any other Go package that imports the harvester).
 // This is fine because if someone wanted the original data, they could use packages like anaconda directly.
@@ -103,7 +105,7 @@ func TwitterSearch(territoryName string, harvestState config.HarvestState, query
 			// Contributor location lookup (if no lat/lng was found on the message - try to reduce number of geocode lookups)
 			contributorLat := 0.0
 			contributorLng := 0.0
-			if statusLatitude == 0.0 || statusLatitude == 0.0 {
+			if statusLatitude == 0.0 {
 				// Do not make a request for nothing (there are no 1 character locations either).
 				if len(tweet.User.Location) > 1 {
 					location := services.geocoder.Geocode(tweet.User.Location)
@@ -166,7 +168,7 @@ func TwitterSearch(territoryName string, harvestState config.HarvestState, query
 				TwitterRetweetCount:       tweet.RetweetCount,
 				TwitterFavoriteCount:      tweet.FavoriteCount,
 			}
-			go StoreHarvestedData(message)
+			StoreHarvestedData(message)
 			LogJson(message, "messages")
 
 			// Keywords are stored on the same collection as hashtags - but under a `keyword` field instead of `tag` field as to not confuse the two.
@@ -242,7 +244,7 @@ func TwitterSearch(territoryName string, harvestState config.HarvestState, query
 							Host:                      linkHostName,
 						}
 						StoreHarvestedData(sharedLink)
-						LogJson(sharedLink, "shared_links")
+						LogJson(sharedLink, "sharedlinks")
 					}
 				}
 			}
@@ -283,7 +285,7 @@ func TwitterSearch(territoryName string, harvestState config.HarvestState, query
 							Source:                    media.Media_url,
 						}
 						StoreHarvestedData(sharedMedia)
-						LogJson(sharedMedia, "shared_links")
+						LogJson(sharedMedia, "sharedlinks")
 					}
 				}
 			}
@@ -363,7 +365,7 @@ func TwitterSearch(territoryName string, harvestState config.HarvestState, query
 	return options, harvestState
 }
 
-// Harvests from a specific Twitter account stream
+// TwitterAccountStream Harvests from a specific Twitter account stream
 func TwitterAccountStream(territoryName string, harvestState config.HarvestState, options url.Values) (url.Values, config.HarvestState) {
 
 	searchResults, _ := services.twitter.GetUserTimeline(options)
@@ -509,7 +511,7 @@ func TwitterAccountStream(territoryName string, harvestState config.HarvestState
 						}
 						// Send to the harvester observer
 						StoreHarvestedData(sharedLink)
-						LogJson(sharedLink, "shared_links")
+						LogJson(sharedLink, "sharedlinks")
 					}
 				}
 			}
@@ -552,7 +554,7 @@ func TwitterAccountStream(territoryName string, harvestState config.HarvestState
 						}
 						// Send to the harvester observer
 						StoreHarvestedData(sharedMedia)
-						LogJson(sharedMedia, "shared_links")
+						LogJson(sharedMedia, "sharedlinks")
 					}
 				}
 			}
@@ -636,7 +638,7 @@ func TwitterAccountStream(territoryName string, harvestState config.HarvestState
 	return options, harvestState
 }
 
-// Harvests Twitter account details to track changes in followers, etc.
+// TwitterAccountDetails Harvests Twitter account details to track changes in followers, etc.
 func TwitterAccountDetails(territoryName string, account string) {
 	params := url.Values{}
 	var contributor anaconda.User
@@ -663,6 +665,6 @@ func TwitterAccountDetails(territoryName string, account string) {
 		Favorites:     int(contributor.FavouritesCount),
 	}
 	StoreHarvestedData(row)
-	LogJson(row, "contributor_growth")
+	LogJson(row, "contributorgrowth")
 	return
 }

@@ -22,8 +22,10 @@ import (
 	"github.com/SocialHarvest/sentiment"
 	"github.com/SocialHarvestVendors/anaconda"
 	"github.com/SocialHarvestVendors/go-instagram/instagram"
-	"github.com/SocialHarvestVendors/google-api-go-client/plus/v1"
-	"github.com/SocialHarvestVendors/google-api-go-client/youtube/v3"
+	"google.golang.org/api/youtube/v3"
+
+	// "github.com/SocialHarvestVendors/google-api-go-client/plus/v1"
+	// "github.com/SocialHarvestVendors/google-api-go-client/youtube/v3"
 	"net"
 	"net/http"
 	"time"
@@ -33,7 +35,6 @@ type harvesterServices struct {
 	twitter           *anaconda.TwitterApi
 	facebookAppToken  string
 	instagram         *instagram.Client
-	googlePlus        *plus.Service
 	youTube           *youtube.Service
 	geocoder          geobed.GeoBed
 	sentimentAnalyzer sentiment.Analyzer
@@ -44,14 +45,13 @@ var services = harvesterServices{}
 var socialHarvestDB *config.SocialHarvestDB
 var httpClient *http.Client
 
-// Sets up a new harvester with the given configuration (which is comprised of several "services")
+// New Sets up a new harvester with the given configuration (which is comprised of several "services")
 func New(configuration config.SocialHarvestConf, database *config.SocialHarvestDB) {
 	harvestConfig = configuration.Harvest
 	// Now set up all the services with the configuration
 	NewTwitter(configuration.Services)
 	NewFacebook(configuration.Services)
 	NewInstagram(configuration.Services)
-	NewGooglePlus(configuration.Services)
 	NewYouTube(configuration.Services)
 	// I'm calling this a "service" because I want to treat it as such, though it's local in memory data.
 	services.geocoder = geobed.NewGeobed()

@@ -59,6 +59,11 @@ type SocialHarvestConf struct {
 		AuthKeys []string `json:"authKeys"`
 		Disabled bool     `json:"disabled"`
 	} `json:"reporterServer"`
+	Store struct {
+		APIURL      string `json:"apiURL"`
+		APIToken    string `json:"apiToken"`
+		APIGroupKey string `json:"apiGroupKey"`
+	}
 	Database struct {
 		Type          string `json:"type"`
 		Host          string `json:"host"`

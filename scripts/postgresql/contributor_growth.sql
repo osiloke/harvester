@@ -4,10 +4,10 @@
 */
 
 -- ----------------------------
---  Table structure for contributor_growth
+--  Table structure for contributorgrowth
 -- ----------------------------
-DROP TABLE IF EXISTS "contributor_growth";
-CREATE TABLE "contributor_growth" (
+DROP TABLE IF EXISTS "contributorgrowth";
+CREATE TABLE "contributorgrowth" (
 	"time" timestamp(6) NULL,
 	"harvest_id" varchar(255) NOT NULL COLLATE "default",
 	"territory" varchar(255) COLLATE "default",
@@ -29,13 +29,13 @@ CREATE TABLE "contributor_growth" (
 WITH (OIDS=FALSE);
 
 -- ----------------------------
---  Primary key structure for table contributor_growth
+--  Primary key structure for table contributorgrowth
 -- ----------------------------
-ALTER TABLE "contributor_growth" ADD PRIMARY KEY ("harvest_id") NOT DEFERRABLE INITIALLY IMMEDIATE;
+ALTER TABLE "contributorgrowth" ADD PRIMARY KEY ("harvest_id") NOT DEFERRABLE INITIALLY IMMEDIATE;
 
 -- ----------------------------
---  Indexes structure for table contributor_growth
+--  Indexes structure for table contributorgrowth
 -- ----------------------------
-CREATE INDEX  "cg_contributor_id_key" ON "contributor_growth" USING btree(contributor_id COLLATE "default" DESC NULLS LAST);
-CREATE INDEX  "cg_time_key" ON "contributor_growth" USING btree("time" DESC NULLS LAST);
+CREATE INDEX  "cg_contributor_id_key" ON "contributorgrowth" USING btree(contributor_id COLLATE "default" DESC NULLS LAST);
+CREATE INDEX  "cg_time_key" ON "contributorgrowth" USING btree("time" DESC NULLS LAST);
 

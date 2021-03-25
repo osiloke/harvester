@@ -18,12 +18,14 @@ package main
 
 import (
 	//"encoding/json"
-	"github.com/SocialHarvest/harvester/lib/config"
-	"github.com/SocialHarvest/harvester/lib/harvester"
 	"log"
 	"math"
 	"net/url"
 	"strconv"
+
+	"github.com/SocialHarvest/harvester/lib/config"
+	"github.com/SocialHarvest/harvester/lib/harvester"
+
 	//"sync"
 	"time"
 )
@@ -249,7 +251,7 @@ func TwitterPublicMessagesByKeyword() {
 					// When results start coming in that have a time older than this "since" value - break the loop (also note, configuration can limit pages too).
 					// However. If nothing has truly been posted since the last harvest, then no results will be returned when passing "since" and that will help a little.
 					// So always pass it. Since we only get the "next" page, we don't need to change it (and it does help particularly with account feeds).
-					lastHarvestId := socialHarvest.Database.GetLastHarvestId(territory.Name, "twitter", "TwitterPublicMessagesByKeyword", keyword)
+					lastHarvestId := socialHarvest.Database.GetLastHarvestID(territory.Name, "twitter", "TwitterPublicMessagesByKeyword", keyword)
 					if lastHarvestId != "" {
 						params.Set("since_id", lastHarvestId)
 					}
@@ -309,7 +311,7 @@ func TwitterPublicMessagesByAccount() {
 
 			// Fetch X pages of results
 			for i := 0; i < maxPages; i++ {
-				lastHarvestId := socialHarvest.Database.GetLastHarvestId(territory.Name, "twitter", "TwitterPublicMessagesByAccount", account)
+				lastHarvestId := socialHarvest.Database.GetLastHarvestID(territory.Name, "twitter", "TwitterPublicMessagesByAccount", account)
 				if lastHarvestId != "" {
 					params.Set("since_id", lastHarvestId)
 				}
@@ -428,7 +430,7 @@ func InstagramMediaByKeyword() {
 
 				// Fetch X pages of results
 				for i := 0; i < maxPages; i++ {
-					lastHarvestId := socialHarvest.Database.GetLastHarvestId(territory.Name, "instagram", "InstagramMediaByKeyword", tag)
+					lastHarvestId := socialHarvest.Database.GetLastHarvestID(territory.Name, "instagram", "InstagramMediaByKeyword", tag)
 					params.Set("max_tag_id", lastHarvestId)
 
 					updatedParams, updatedHarvestState := harvester.InstagramSearch(territory.Name, harvestState, tag, params)
@@ -453,7 +455,7 @@ func InstagramMediaByKeyword() {
 	}
 }
 
-// Track Instagram account changes
+// InstagramGrowthByAccount Track Instagram account changes
 func InstagramGrowthByAccount() {
 	for _, territory := range socialHarvest.Config.Harvest.Territories {
 		for _, account := range territory.Accounts.Instagram {
@@ -464,172 +466,7 @@ func InstagramGrowthByAccount() {
 	return
 }
 
-// Searches Google+ for activities (posts) by territory keyword criteria
-func GooglePlusActivitieByKeyword() {
-	for _, territory := range socialHarvest.Config.Harvest.Territories {
-		// If different credentials were set for the territory, this will find and set them
-		harvester.NewGooglePlusTerritoryCredentials(territory.Name)
-
-		// Build params for search
-		params := url.Values{}
-		// Search all keywords
-		if len(territory.Content.Keywords) > 0 {
-			for _, keyword := range territory.Content.Keywords {
-				// log.Print("Searching for: " + keyword)
-
-				// A globally set limit in the Social Harvest config (or default of "100")
-				if territory.Limits.ResultsPerPage != "" {
-					params.Set("count", territory.Limits.ResultsPerPage)
-				} else {
-					params.Set("count", "20")
-				}
-
-				// Keep track of the last id harvested, the number of items harvested, etc. This information will be returend from `harvester.TwitterSearch()`
-				// on each call in the loop. We'll just keep incrementing the items and overwriting the last id and time. This information then gets saved to the harvest series.
-				// So then on the next harvest, we can see where we left off so we don't request the same data again from the API. This doesn't guarantee the prevention of dupes
-				// of course, but it does decrease unnecessary API calls which helps with rate limiting and efficiency.
-				harvestState := config.HarvestState{
-					LastId:         "",
-					LastTime:       time.Now(),
-					PagesHarvested: 1,
-					ItemsHarvested: 0,
-				}
-				// log.Println(harvestState)
-
-				// Limit to 10 pages max. Anything more will simply take too long and cause issues.
-				maxPages := territory.Limits.MaxResultsPages
-				if maxPages == 0 {
-					maxPages = 10
-				}
-				// Google+ is just like Instagram. It has a maximum of 20 items in the response. So adjust it.
-				rpp, rppErr := strconv.ParseInt(territory.Limits.ResultsPerPage, 10, 64)
-				if rppErr == nil {
-					if rpp > 20 {
-						adjustedRpp := rpp / 20
-						// TODO: Ummm, is there a better way than this?
-						maxPages = int(math.Floor(float64(int64(maxPages) * adjustedRpp)))
-					}
-				}
-
-				// Fetch X pages of results
-				for i := 0; i < maxPages; i++ {
-					// lastHarvestId := socialHarvest.Database.GetLastHarvestId(territory.Name, "googlePlus", "GooglePlusActivitieByKeyword", keyword)
-					// This is a bit difficult. Google+ has a "nextPageToken" which is true pagination, whereas other networks have a since/until but start from the latest.
-					// This means Google+ would allow us to never miss a single thing. This is handy if we're trying to get everything and don't rest for long periods of time
-					// between harvests. However, we do. A typical harvest cycle is every hour. A lot can be posted since then and by going back to where the harvest left off,
-					// a lot is going to be missed. Eventually the harvest will be so far behind it wouldn't be harvesting anything new and relevant. Whereas other networks
-					// simply ensure you don't go back and repeat what you already requested, but start from the most recent.
-					// TODO: Think about this. Maybe use the "nextPageToken" between harvests if they are 15min apart or less. Otherwise start over. Even if there hasn't been
-					// much activity and there are some dupes, they still won't save to the database due to unique keys. For more popular territories, it'll work out better.
-					// However, we will need to hang on to the "nextPageToken" in the updatedParams below for pagination during the current harvest.
-
-					updatedParams, updatedHarvestState := harvester.GooglePlusActivitySearch(territory.Name, harvestState, keyword, params)
-					params = updatedParams
-					harvestState = updatedHarvestState
-					// log.Println("harvested a page of results from instagram")
-
-					// Always save this on each page. Then if something crashes for some reason during a harvest of several pages, we can pick up where we left off. Rather than starting over again.
-					if harvestState.ItemsHarvested > 0 {
-						socialHarvest.Database.SetLastHarvestTime(territory.Name, "googlePlus", "GooglePlusActivitieByKeyword", keyword, harvestState.LastTime, harvestState.LastId, harvestState.ItemsHarvested)
-					}
-					// We also avoid using "break" because the for loop is now based on number of pages to harvest.
-					// But this could lead to harvesting pages taht don't exist, so we should still "break" in that case.
-					if params.Get("nextPageToken") == "" {
-						// log.Println("completed search - no more pages of results")
-						break
-					}
-				}
-			}
-		}
-
-	}
-}
-
-// Searches Google+ for activities (posts) by territory account criteria
-func GooglePlusActivitieByAccount() {
-	for _, territory := range socialHarvest.Config.Harvest.Territories {
-		// If different credentials were set for the territory, this will find and set them
-		harvester.NewGooglePlusTerritoryCredentials(territory.Name)
-
-		// Build params for search
-		params := url.Values{}
-		// Search all accounts
-		if len(territory.Accounts.GooglePlus) > 0 {
-			for _, account := range territory.Accounts.GooglePlus {
-				// log.Print("Searching for: " + account)
-
-				// A globally set limit in the Social Harvest config (or default of "100")
-				if territory.Limits.ResultsPerPage != "" {
-					params.Set("count", territory.Limits.ResultsPerPage)
-				} else {
-					params.Set("count", "20")
-				}
-
-				// Keep track of the last id harvested, the number of items harvested, etc. This information will be returend from `harvester.TwitterSearch()`
-				// on each call in the loop. We'll just keep incrementing the items and overwriting the last id and time. This information then gets saved to the harvest series.
-				// So then on the next harvest, we can see where we left off so we don't request the same data again from the API. This doesn't guarantee the prevention of dupes
-				// of course, but it does decrease unnecessary API calls which helps with rate limiting and efficiency.
-				harvestState := config.HarvestState{
-					LastId:         "",
-					LastTime:       time.Now(),
-					PagesHarvested: 1,
-					ItemsHarvested: 0,
-				}
-				// log.Println(harvestState)
-
-				// Limit to 10 pages max. Anything more will simply take too long and cause issues.
-				maxPages := territory.Limits.MaxResultsPages
-				if maxPages == 0 {
-					maxPages = 10
-				}
-				// In this case, Google+ does allow 100 results per page (unlike searching by keyword).
-
-				// Fetch X pages of results
-				for i := 0; i < maxPages; i++ {
-					// lastHarvestId := socialHarvest.Database.GetLastHarvestId(territory.Name, "googlePlus", "GooglePlusActivitieByAccount", account)
-					// This is a bit difficult. Google+ has a "nextPageToken" which is true pagination, whereas other networks have a since/until but start from the latest.
-					// This means Google+ would allow us to never miss a single thing. This is handy if we're trying to get everything and don't rest for long periods of time
-					// between harvests. However, we do. A typical harvest cycle is every hour. A lot can be posted since then and by going back to where the harvest left off,
-					// a lot is going to be missed. Eventually the harvest will be so far behind it wouldn't be harvesting anything new and relevant. Whereas other networks
-					// simply ensure you don't go back and repeat what you already requested, but start from the most recent.
-					// TODO: Think about this. Maybe use the "nextPageToken" between harvests if they are 15min apart or less. Otherwise start over. Even if there hasn't been
-					// much activity and there are some dupes, they still won't save to the database due to unique keys. For more popular territories, it'll work out better.
-					// However, we will need to hang on to the "nextPageToken" in the updatedParams below for pagination during the current harvest.
-
-					updatedParams, updatedHarvestState := harvester.GooglePlusActivityByAccount(territory.Name, harvestState, account, params)
-					params = updatedParams
-					harvestState = updatedHarvestState
-					// log.Println("harvested a page of results from instagram")
-
-					// Always save this on each page. Then if something crashes for some reason during a harvest of several pages, we can pick up where we left off. Rather than starting over again.
-					if harvestState.ItemsHarvested > 0 {
-						socialHarvest.Database.SetLastHarvestTime(territory.Name, "googlePlus", "GooglePlusActivitieByAccount", account, harvestState.LastTime, harvestState.LastId, harvestState.ItemsHarvested)
-					}
-					// We also avoid using "break" because the for loop is now based on number of pages to harvest.
-					// But this could lead to harvesting pages taht don't exist, so we should still "break" in that case.
-					if params.Get("nextPageToken") == "" {
-						// log.Println("completed search - no more pages of results")
-						break
-					}
-				}
-			}
-		}
-
-	}
-}
-
-// Track Google+ account changes
-func GooglePlusGrowthByAccount() {
-	for _, territory := range socialHarvest.Config.Harvest.Territories {
-		for _, account := range territory.Accounts.GooglePlus {
-			harvester.GooglePlusAccountDetails(territory.Name, account)
-			// log.Println("harvested a account stats from google+")
-		}
-	}
-	return
-}
-
-// Track YouTube account (channel) changes
+// YouTubeGrowthByAccount Track YouTube account (channel) changes
 func YouTubeGrowthByAccount() {
 	for _, territory := range socialHarvest.Config.Harvest.Territories {
 		for _, account := range territory.Accounts.YouTube {
@@ -640,28 +477,25 @@ func YouTubeGrowthByAccount() {
 	return
 }
 
-// Simply calls every other function here, harvesting everything
+// HarvestAll Simply calls every other function here, harvesting everything
 func HarvestAll() {
 	HarvestAllContent()
 	HarvestAllAccounts()
 }
 
-// Calls all harvest functions that gather content (public posts and such)
+// HarvestAllContent Calls all harvest functions that gather content (public posts and such)
 func HarvestAllContent() {
-	go FacebookPublicMessagesByKeyword()
-	go FacebookMessagesByAccount()
 	go TwitterPublicMessagesByKeyword()
 	go TwitterPublicMessagesByAccount()
+	go FacebookPublicMessagesByKeyword()
+	go FacebookMessagesByAccount()
 	go InstagramMediaByKeyword()
-	go GooglePlusActivitieByKeyword()
-	go GooglePlusActivitieByAccount()
 }
 
-// Calls all harvest functions that gather information about account changes/growth
+// HarvestAllAccounts Calls all harvest functions that gather information about account changes/growth
 func HarvestAllAccounts() {
-	go FacebookGrowthByAccount()
 	go TwitterGrowthByAccount()
+	go FacebookGrowthByAccount()
 	go InstagramGrowthByAccount()
-	go GooglePlusGrowthByAccount()
 	go YouTubeGrowthByAccount()
 }

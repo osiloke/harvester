@@ -17,9 +17,12 @@
 package harvester
 
 import (
+	"fmt"
+
 	"github.com/SocialHarvest/harvester/lib/config"
 	geohash "github.com/SocialHarvestVendors/geohash-golang"
 	"github.com/SocialHarvestVendors/go-querystring/query"
+
 	//"github.com/mitchellh/mapstructure"
 	"bytes"
 	"encoding/json"
@@ -27,6 +30,7 @@ import (
 	"net"
 	"net/http"
 	"net/url"
+
 	//"sync"
 	"time"
 )
@@ -147,10 +151,10 @@ var fbToken string
 var fbHttpClient *http.Client
 var fbGraphApiBaseUrl = "https://graph.facebook.com/"
 
-// Set the appToken for future use (global)
+// NewFacebook Set the appToken for future use (global)
 func NewFacebook(servicesConfig config.ServicesConfig) {
 	fbToken = servicesConfig.Facebook.AppToken
-
+	fmt.Println(fbToken)
 	fbHttpClient = &http.Client{
 		Transport: &TimeoutTransport{
 			Transport: http.Transport{
@@ -167,7 +171,7 @@ func NewFacebook(servicesConfig config.ServicesConfig) {
 	}
 }
 
-// If the territory has a different appToken to use
+// NewFacebookTerritoryCredentials If the territory has a different appToken to use
 func NewFacebookTerritoryCredentials(territory string) {
 	for _, t := range harvestConfig.Territories {
 		if t.Name == territory {
@@ -180,7 +184,7 @@ func NewFacebookTerritoryCredentials(territory string) {
 	}
 }
 
-// Takes an array of Post structs and converts it to JSON and logs to file (to be picked up by Fluentd, Logstash, Ik, etc.)
+// FacebookPostsOut Takes an array of Post structs and converts it to JSON and logs to file (to be picked up by Fluentd, Logstash, Ik, etc.)
 func FacebookPostsOut(posts []FacebookPost, territoryName string, params FacebookParams) (int, string, time.Time) {
 	var itemsHarvested = 0
 	var latestId = ""
@@ -353,7 +357,7 @@ func FacebookPostsOut(posts []FacebookPost, territoryName string, params Faceboo
 					Host:                      hostName,
 				}
 				StoreHarvestedData(sharedLinksRow)
-				LogJson(sharedLinksRow, "shared_links")
+				LogJson(sharedLinksRow, "sharedlinks")
 			}
 
 			// mentions row (note the harvest id in the following - any post that has multiple subobjects to be stored separately will need a different harvest id, else only one of those subobjects would be stored)
@@ -499,7 +503,7 @@ func FacebookPostsOut(posts []FacebookPost, territoryName string, params Faceboo
 
 // -------------- API CALLS
 
-// Searches public posts on Facebook
+// FacebookSearch Searches public posts on Facebook
 func FacebookSearch(territoryName string, harvestState config.HarvestState, params FacebookParams) (FacebookParams, config.HarvestState) {
 	// Look for access_token override, if not present, use default fbToken from config
 	if params.AccessToken == "" {
@@ -510,7 +514,7 @@ func FacebookSearch(territoryName string, harvestState config.HarvestState, para
 		return params, harvestState
 	}
 
-	// Concatenate and build the searchUrl
+	// Concatenate and build the searchURL
 	var buffer bytes.Buffer
 	buffer.WriteString(fbGraphApiBaseUrl)
 	buffer.WriteString("/search?")
@@ -521,11 +525,11 @@ func FacebookSearch(territoryName string, harvestState config.HarvestState, para
 		return params, harvestState
 	}
 	buffer.WriteString(v.Encode())
-	searchUrl := buffer.String()
+	searchURL := buffer.String()
 	buffer.Reset()
 
 	// set up the request
-	req, err := http.NewRequest("GET", searchUrl, nil)
+	req, err := http.NewRequest("GET", searchURL, nil)
 	if err != nil {
 		return params, harvestState
 	}
@@ -563,10 +567,10 @@ func FacebookSearch(territoryName string, harvestState config.HarvestState, para
 				params.Until = ""
 			}
 		} else {
-			// log.Println(err)
+			log.Println(err)
 		}
 	}
-
+	fmt.Println(data)
 	// Only attempt to store if we have some results.
 	if len(data.Posts) > 0 {
 		// Save, then return updated params and harvest state for next round (if there is another one)
@@ -576,7 +580,7 @@ func FacebookSearch(territoryName string, harvestState config.HarvestState, para
 	return params, harvestState
 }
 
-// Gets the public posts for a given user or page id (or name actually)
+// FacebookFeed Gets the public posts for a given user or page id (or name actually)
 func FacebookFeed(territoryName string, harvestState config.HarvestState, account string, params FacebookParams) (FacebookParams, config.HarvestState) {
 	// XBox page feed for example...
 	// https://graph.facebook.com/xbox
@@ -602,11 +606,11 @@ func FacebookFeed(territoryName string, harvestState config.HarvestState, accoun
 		return params, harvestState
 	}
 	buffer.WriteString(v.Encode())
-	feedUrl := buffer.String()
+	feedURL := buffer.String()
 	buffer.Reset()
 
 	// set up the request
-	req, err := http.NewRequest("GET", feedUrl, nil)
+	req, err := http.NewRequest("GET", feedURL, nil)
 	if err != nil {
 		return params, harvestState
 	}
@@ -719,6 +723,6 @@ func FacebookAccountDetails(territoryName string, account string) {
 		Checkins:      contributor.Checkins,
 	}
 	StoreHarvestedData(row)
-	LogJson(row, "contributor_growth")
+	LogJson(row, "contributorgrowth")
 	return
 }

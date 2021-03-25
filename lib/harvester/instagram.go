@@ -19,9 +19,6 @@ package harvester
 import (
 	//"encoding/json"
 	"bytes"
-	"github.com/SocialHarvest/harvester/lib/config"
-	geohash "github.com/SocialHarvestVendors/geohash-golang"
-	"github.com/SocialHarvestVendors/go-instagram/instagram"
 	"log"
 	"net"
 	"net/http"
@@ -29,6 +26,10 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/SocialHarvest/harvester/lib/config"
+	geohash "github.com/SocialHarvestVendors/geohash-golang"
+	"github.com/SocialHarvestVendors/go-instagram/instagram"
 	//"sync"
 )
 
@@ -261,7 +262,7 @@ func InstagramSearch(territoryName string, harvestState config.HarvestState, tag
 				}
 				// Send to the harvester observer
 				StoreHarvestedData(sharedLink)
-				LogJson(sharedLink, "shared_links")
+				LogJson(sharedLink, "sharedlinks")
 
 				// hashtags
 				if len(item.Tags) > 0 {
@@ -368,7 +369,7 @@ func InstagramAccountDetails(territoryName string, account string) {
 			StatusUpdates: contributor.Counts.Media,
 		}
 		StoreHarvestedData(row)
-		LogJson(row, "contributor_growth")
+		LogJson(row, "contributorgrowth")
 	}
 	return
 }

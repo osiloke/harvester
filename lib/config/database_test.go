@@ -186,7 +186,7 @@ package config
 // 	c.Assert(lastHarvestTime.Minute(), Equals, lastTime.Minute())
 // 	c.Assert(lastHarvestTime.Second(), Equals, lastTime.Second())
 
-// 	lastHarvestId := db.GetLastHarvestId("foo", "facebook", "publicPostsByKeyword", "bar")
+// 	lastHarvestId := db.GetLastHarvestID("foo", "facebook", "publicPostsByKeyword", "bar")
 // 	c.Assert(lastHarvestId, Equals, lastHarvestData.LastIdHarvested)
 // }
 

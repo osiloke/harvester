@@ -38,11 +38,11 @@ const workerCount = 4
 // This represents a channel for each series.
 // TODO: Maybe keep this in sync with the series listed in config/series.go or maybe make it be passed to NewLogggers() (if the latter, we could turn this into its own package)
 var logChannels = map[string]chan []byte{
-	"messages":           make(chan []byte, 1024),
-	"mentions":           make(chan []byte, 1024),
-	"hashtags":           make(chan []byte, 1024),
-	"shared_links":       make(chan []byte, 1024),
-	"contributor_growth": make(chan []byte, 1024),
+	"messages":          make(chan []byte, 1024),
+	"mentions":          make(chan []byte, 1024),
+	"hashtags":          make(chan []byte, 1024),
+	"sharedlinks":       make(chan []byte, 1024),
+	"contributorgrowth": make(chan []byte, 1024),
 }
 var logWorkers = map[string][]*Worker{}
 var logRootDir string

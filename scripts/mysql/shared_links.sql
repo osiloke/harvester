@@ -6,10 +6,10 @@ SET NAMES utf8;
 SET FOREIGN_KEY_CHECKS = 0;
 
 -- ----------------------------
---  Table structure for `shared_links`
+--  Table structure for `sharedlinks`
 -- ----------------------------
-DROP TABLE IF EXISTS `shared_links`;
-CREATE TABLE `shared_links` (
+DROP TABLE IF EXISTS `sharedlinks`;
+CREATE TABLE `sharedlinks` (
   `time` timestamp(6) NULL DEFAULT NULL,
   `harvest_id` varchar(255) NOT NULL,
   `territory` varchar(255) DEFAULT NULL,

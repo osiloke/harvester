@@ -18,8 +18,9 @@ package harvester
 
 import (
 	"github.com/SocialHarvest/harvester/lib/config"
-	"github.com/SocialHarvestVendors/google-api-go-client/googleapi/transport"
-	"github.com/SocialHarvestVendors/google-api-go-client/youtube/v3"
+	"google.golang.org/api/googleapi/transport"
+	"google.golang.org/api/youtube/v3"
+
 	//"encoding/json"
 	"log"
 	"net/http"
@@ -78,7 +79,7 @@ func YouTubeAccountDetails(territoryName string, account string) {
 				Views:         int(c.Statistics.ViewCount),
 			}
 			StoreHarvestedData(row)
-			LogJson(row, "contributor_growth")
+			LogJson(row, "contributorgrowth")
 		}
 	}
 	return

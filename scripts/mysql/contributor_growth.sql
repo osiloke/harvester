@@ -6,10 +6,10 @@ SET NAMES utf8;
 SET FOREIGN_KEY_CHECKS = 0;
 
 -- ----------------------------
---  Table structure for `contributor_growth`
+--  Table structure for `contributorgrowth`
 -- ----------------------------
-DROP TABLE IF EXISTS `contributor_growth`;
-CREATE TABLE `contributor_growth` (
+DROP TABLE IF EXISTS `contributorgrowth`;
+CREATE TABLE `contributorgrowth` (
   `time` timestamp(6) NULL DEFAULT NULL,
   `harvest_id` varchar(255) NOT NULL,
   `territory` varchar(255) DEFAULT NULL,

@@ -157,7 +157,7 @@ package harvester
 var servicesCfg = config.ServicesConfig{}
 
 func TestNewFacebook(t *testing.T) {
-	servicesCfg.Facebook.AppToken = "1234567890"
+	servicesCfg.Facebook. = "1234567890"
 	NewFacebook(servicesCfg)
 
 	expected := "1234567890"

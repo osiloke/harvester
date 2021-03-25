@@ -19,13 +19,15 @@ package main
 import (
 	"encoding/json"
 	"flag"
+	"log"
+	"net/http"
+
 	"github.com/SocialHarvest/harvester/lib/config"
 	"github.com/SocialHarvest/harvester/lib/harvester"
 	"github.com/SocialHarvestVendors/color"
 	"github.com/SocialHarvestVendors/go-json-rest/rest"
 	"github.com/bugsnag/bugsnag-go"
-	"log"
-	"net/http"
+
 	//_ "net/http/pprof"
 	"os"
 	"reflect"
@@ -253,9 +255,11 @@ func setInitialSchedule() {
 	// TODO: ^^^^
 	for _, territory := range socialHarvest.Config.Harvest.Territories {
 		if territory.Schedule.Everything.Accounts != "" {
+			log.Println("territory.Schedule.Everything.Accounts", territory.Schedule.Everything.Accounts)
 			socialHarvest.Schedule.Cron.AddFunc(territory.Schedule.Everything.Accounts, HarvestAllAccounts, "Harvesting all accounts - "+territory.Schedule.Everything.Accounts)
 		}
 		if territory.Schedule.Everything.Content != "" {
+			log.Println("territory.Schedule.Everything.Content", territory.Schedule.Everything.Content)
 			socialHarvest.Schedule.Cron.AddFunc(territory.Schedule.Everything.Content, HarvestAllContent, "Harvesting all content - "+territory.Schedule.Everything.Content)
 		}
 	}
@@ -321,7 +325,7 @@ func setConfig(original bool) error {
 	harvester.NewGenderData("./sh-data/census-female-names.csv", "./sh-data/census-male-names.csv")
 
 	// Set the initial schedule (can be changed via API if available)
-	setInitialSchedule()
+	// setInitialSchedule()
 
 	return err
 }
@@ -336,10 +340,6 @@ func main() {
 	cErr := setConfig(false)
 	if cErr != nil {
 		log.Fatalln("Failed to load the harvester configuration.")
-	}
-	// NOTE: A database is optional for Social Harvest (harvested data can be logged for use with Fluentd for example)
-	if socialHarvest.Database.Postgres != nil {
-		defer socialHarvest.Database.Postgres.Close()
 	}
 
 	// Debug - do not compile with this
@@ -368,7 +368,7 @@ func main() {
 	// go TwitterPublicMessagesByKeyword()
 	// go TwitterPublicMessagesByAccount()
 	// // Search Instagram
-	// go InstagramMediaByKeyword()
+	go InstagramMediaByKeyword()
 	// go GooglePlusActivitieByKeyword()
 	// go GooglePlusActivitieByAccount()
 	// go HarvestAllContent()

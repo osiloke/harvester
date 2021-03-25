@@ -4,10 +4,10 @@
 */
 
 -- ----------------------------
---  Table structure for shared_links
+--  Table structure for sharedlinks
 -- ----------------------------
-DROP TABLE IF EXISTS "shared_links";
-CREATE TABLE "shared_links" (
+DROP TABLE IF EXISTS "sharedlinks";
+CREATE TABLE "sharedlinks" (
 	"time" timestamp(6) NULL,
 	"harvest_id" varchar(255) NOT NULL COLLATE "default",
 	"territory" varchar(255) COLLATE "default",
@@ -36,23 +36,23 @@ CREATE TABLE "shared_links" (
 WITH (OIDS=FALSE);
 
 -- ----------------------------
---  Primary key structure for table shared_links
+--  Primary key structure for table sharedlinks
 -- ----------------------------
-ALTER TABLE "shared_links" ADD PRIMARY KEY ("harvest_id") NOT DEFERRABLE INITIALLY IMMEDIATE;
+ALTER TABLE "sharedlinks" ADD PRIMARY KEY ("harvest_id") NOT DEFERRABLE INITIALLY IMMEDIATE;
 
 -- ----------------------------
---  Uniques structure for table shared_links
+--  Uniques structure for table sharedlinks
 -- ----------------------------
-ALTER TABLE "shared_links" ADD CONSTRAINT "shared_links_harvest_id_unique" UNIQUE ("harvest_id") NOT DEFERRABLE INITIALLY IMMEDIATE;
+ALTER TABLE "sharedlinks" ADD CONSTRAINT "sharedlinks_harvest_id_unique" UNIQUE ("harvest_id") NOT DEFERRABLE INITIALLY IMMEDIATE;
 
 -- ----------------------------
---  Indexes structure for table shared_links
+--  Indexes structure for table sharedlinks
 -- ----------------------------
-CREATE INDEX  "sl_contributor_id_key" ON "shared_links" USING btree(contributor_id COLLATE "default" DESC NULLS LAST);
-CREATE INDEX  "sl_contributor_geohash_key" ON "shared_links" USING btree(contributor_geohash COLLATE "default" ASC NULLS LAST);
-CREATE INDEX  "sl_expanded_url_key" ON "shared_links" USING btree(expanded_url COLLATE "default" DESC NULLS LAST);
-CREATE INDEX  "sl_host_key" ON "shared_links" USING btree("host" COLLATE "default" ASC NULLS LAST);
-CREATE INDEX  "sl_message_id_key" ON "shared_links" USING btree(message_id COLLATE "default" DESC NULLS LAST);
-CREATE INDEX  "sl_time_key" ON "shared_links" USING btree("time" DESC NULLS LAST);
-CREATE INDEX  "sl_url_key" ON "shared_links" USING btree(url COLLATE "default" DESC NULLS LAST);
+CREATE INDEX  "sl_contributor_id_key" ON "sharedlinks" USING btree(contributor_id COLLATE "default" DESC NULLS LAST);
+CREATE INDEX  "sl_contributor_geohash_key" ON "sharedlinks" USING btree(contributor_geohash COLLATE "default" ASC NULLS LAST);
+CREATE INDEX  "sl_expanded_url_key" ON "sharedlinks" USING btree(expanded_url COLLATE "default" DESC NULLS LAST);
+CREATE INDEX  "sl_host_key" ON "sharedlinks" USING btree("host" COLLATE "default" ASC NULLS LAST);
+CREATE INDEX  "sl_message_id_key" ON "sharedlinks" USING btree(message_id COLLATE "default" DESC NULLS LAST);
+CREATE INDEX  "sl_time_key" ON "sharedlinks" USING btree("time" DESC NULLS LAST);
+CREATE INDEX  "sl_url_key" ON "sharedlinks" USING btree(url COLLATE "default" DESC NULLS LAST);
 
